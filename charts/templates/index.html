@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body %}
+<div>
+    {% if user.is_authenticated %}
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <figure class="highcharts-figure">
+                        <div id="container1"></div>
+                        <p class="highcharts-description">*This chart shows Vulnerability Status: Unremediated
+                            ({{ unremediated }}) vs. Total ({{ total }})</p>
+                    </figure>
+                </div></div><br><br><br><br><br><br><br><br>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <figure class="highcharts-figure">
+                        <div id="container2"></div>
+                        <p class="highcharts-description">*This chart shows total unremediated vulnerability by Status</p>
+                    </figure>
+                </div>
+                <div class="col-sm-1"></div>
+            </div><br><br><br><br><br><br><br><br>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <figure class="highcharts-figure">
+                        <div id="container3"></div>
+                        <p class="highcharts-description">*This chart shows total unremediated vulnerability by Severity</p>
+                    </figure>
+                </div>
+            </div>
+        </div><br><br><br><br><br><br><br><br>
+
+    {% else %}
+    <div class="container">
+            <div class="row">
+                <div class="col-sm-5">
+                </div>
+                <div class="col-sm-7">
+                        <a class="nav-link" href="{% url 'register' %}">
+                            <button type="button" class="btn btn-primary btn-lg">Create your account</button>
+                        </a>
+                </div>
+            </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+let chart1 = Highcharts.chart('container1', {
+  chart: {
+    borderColor: '#303030',
+    borderRadius: 0,
+    borderWidth: 2,
+    plotBackgroundColor: null,
+    plotBorderWidth: null,
+    plotShadow: false,
+    type: 'pie'
+  },
+  title: {
+    text: 'Vulnerability Status.'
+  },
+  tooltip: {
+    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+  },
+  accessibility: {
+    point: {
+      valueSuffix: '%'
+    }
+  },
+  plotOptions: {
+    pie: {
+      allowPointSelect: true,
+      cursor: 'pointer',
+      dataLabels: {
+        enabled: true,
+        format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+      }
+    }
+  },
+  series: [{
+    name: 'vulnerabilities',
+    colorByPoint: true,
+    data: [{
+      name: 'Remediated',
+      y: {{ remediated }},
+      sliced: true,
+      selected: true
+    }, {
+      name: 'Unremediated',
+      y: {{ unremediated }},
+    }]
+  }]
+});
+
+
+
+
+let chart2 = Highcharts.chart('container2', {
+  chart: {
+    borderColor: '#303030',
+    borderRadius: 0,
+    borderWidth: 2,
+    type: 'column'
+  },
+  title: {
+    text: 'Unremediated vulnerability* by Status'
+  },
+  accessibility: {
+    announceNewData: {
+      enabled: true
+    }
+  },
+  xAxis: {
+	categories: [{% for entry in unremediated_by_status %}'Status: {{ entry.status }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+
+  },
+  yAxis: {
+    title: {
+      text: 'Total vulnerabilities'
+    }
+  },
+  legend: {
+    enabled: false
+  },
+  plotOptions: {
+    series: {
+      borderWidth: 0,
+      dataLabels: {
+        enabled: true
+      }
+    }
+  },
+
+
+
+  series: [
+    {
+      name: 'Vulnerabilities',
+      colorByPoint: true,
+      data: [{% for entry in unremediated_by_status %}
+      {{ entry.total }}
+      {% if not forloop.last %}, {% endif %}{% endfor %}]
+    }
+  ]
+});
+
+
+
+
+let chart3 = Highcharts.chart('container3', {
+  chart: {
+    borderColor: '#303030',
+    borderRadius: 0,
+    borderWidth: 2,
+    type: 'bar'
+  },
+  title: {
+    text: 'Unremediated vulnerabilities* by Severity'
+  },
+  xAxis: {
+    categories: [{% for entry in unremediated_by_severity %}'Severity: {{ entry.severity }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+    title: {
+      text: null
+    }
+  },
+  yAxis: {
+    title: {
+      text: 'Total vulnerabilities'
+    },
+    labels: {
+      overflow: 'justify'
+    }
+  },
+  plotOptions: {
+    bar: {
+      dataLabels: {
+        enabled: true
+      }
+    }
+  },
+  legend: {
+    layout: 'vertical',
+    align: 'right',
+    verticalAlign: 'top',
+    x: -40,
+    y: 80,
+    floating: true,
+    borderWidth: 1,
+    backgroundColor:
+      Highcharts.defaultOptions.legend.backgroundColor || '#FFFFFF',
+    shadow: false
+  },
+  credits: {
+    enabled: false
+  },
+
+  series: [{
+    showInLegend: false,
+    name: 'vulnerabilities',
+    data: [{% for entry in unremediated_by_severity %}{{ entry.total }}{% if not forloop.last %}, {% endif %}{% endfor %}]
+  }]
+});
+</script>
+{% endblock %}
